@@ -8,7 +8,7 @@ from typing import Optional
 _LOGGER = logging.getLogger(__name__)
 
 CONNECT_TIMEOUT = 5.0
-RESPONSE_TIMEOUT = 3.0
+RESPONSE_TIMEOUT = 1.0
 RECONNECT_DELAY = 10.0  # seconds before reconnect attempt
 
 

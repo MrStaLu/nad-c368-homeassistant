@@ -21,10 +21,10 @@ from .const import (
     DEFAULT_MAX_VOLUME,
     DEFAULT_MIN_VOLUME,
     DEFAULT_NAME,
-    DEFAULT_SOURCES,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
+from .helpers import get_sources
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,11 +66,15 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             "manufacturer": "NAD",
             "model": "C368",
         }
-        self._min_vol = entry.data.get(CONF_MIN_VOLUME, DEFAULT_MIN_VOLUME)
-        self._max_vol = entry.data.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
-        self._vol_step = entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-        # Reverse map: "Optical 1" → "1"
-        self._source_to_num = {v: k for k, v in DEFAULT_SOURCES.items()}
+        # Options (Configure button) override the original setup values.
+        opts = {**entry.data, **entry.options}
+        self._min_vol = opts.get(CONF_MIN_VOLUME, DEFAULT_MIN_VOLUME)
+        self._max_vol = opts.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
+        self._vol_step = opts.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        # Source names (custom names from options, else defaults)
+        self._sources = get_sources(entry)
+        # Reverse map: "Phono" → "5"
+        self._source_to_num = {v: k for k, v in self._sources.items()}
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -84,8 +88,10 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         vol = self.coordinator.data.get("volume")
         if vol is None:
             return None
-        # Convert dB (-70…0) to 0.0–1.0
+        # Convert dB (min_vol…max_vol) to 0.0–1.0
         span = self._max_vol - self._min_vol
+        if span <= 0:
+            return None
         return max(0.0, min(1.0, (vol - self._min_vol) / span))
 
     @property
@@ -95,11 +101,11 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         src_num = self.coordinator.data.get("source")
-        return DEFAULT_SOURCES.get(src_num) if src_num else None
+        return self._sources.get(src_num) if src_num else None
 
     @property
     def source_list(self) -> list[str]:
-        return list(DEFAULT_SOURCES.values())
+        return list(self._sources.values())
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -107,36 +113,46 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     # ── Commands ──────────────────────────────────────────────────────────────
 
+    def _optimistic(self, **values) -> None:
+        """Update local state immediately so the UI reacts instantly."""
+        if self.coordinator.data is not None:
+            self.coordinator.data.update(values)
+        self.async_write_ha_state()
+
     async def async_turn_on(self) -> None:
         await self._client.set_power(True)
+        self._optimistic(power=True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self) -> None:
         await self._client.set_power(False)
+        self._optimistic(power=False)
         await self.coordinator.async_request_refresh()
 
     async def async_mute_volume(self, mute: bool) -> None:
         await self._client.set_mute(mute)
-        await self.coordinator.async_request_refresh()
+        self._optimistic(mute=mute)
 
     async def async_set_volume_level(self, volume: float) -> None:
         span = self._max_vol - self._min_vol
-        db = self._min_vol + (volume * span)
-        await self._client.set_volume(round(db))
-        await self.coordinator.async_request_refresh()
+        db = round(self._min_vol + (volume * span))
+        await self._client.set_volume(db)
+        self._optimistic(volume=db)
 
     async def async_volume_up(self) -> None:
         vol = self.coordinator.data.get("volume") or self._min_vol
-        await self._client.set_volume(min(vol + self._vol_step, self._max_vol))
-        await self.coordinator.async_request_refresh()
+        new_vol = min(vol + self._vol_step, self._max_vol)
+        await self._client.set_volume(new_vol)
+        self._optimistic(volume=new_vol)
 
     async def async_volume_down(self) -> None:
         vol = self.coordinator.data.get("volume") or self._min_vol
-        await self._client.set_volume(max(vol - self._vol_step, self._min_vol))
-        await self.coordinator.async_request_refresh()
+        new_vol = max(vol - self._vol_step, self._min_vol)
+        await self._client.set_volume(new_vol)
+        self._optimistic(volume=new_vol)
 
     async def async_select_source(self, source: str) -> None:
         num = self._source_to_num.get(source)
         if num:
             await self._client.set_source(num)
-            await self.coordinator.async_request_refresh()
+            self._optimistic(source=num)

@@ -78,10 +78,15 @@ class NADSwitch(CoordinatorEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         return self.coordinator.data.get(self._desc.data_key)
 
+    def _optimistic(self, value: bool) -> None:
+        if self.coordinator.data is not None:
+            self.coordinator.data[self._desc.data_key] = value
+        self.async_write_ha_state()
+
     async def async_turn_on(self, **kwargs) -> None:
         await self._client.set_bool_var(self._desc.nad_variable, True)
-        await self.coordinator.async_request_refresh()
+        self._optimistic(True)
 
     async def async_turn_off(self, **kwargs) -> None:
         await self._client.set_bool_var(self._desc.nad_variable, False)
-        await self.coordinator.async_request_refresh()
+        self._optimistic(False)

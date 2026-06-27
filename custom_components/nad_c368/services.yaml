@@ -1,0 +1,32 @@
+send_command:
+  name: Send command
+  description: >-
+    Send any NAD C368 RS232 command as variable=value. Lets you reach every
+    setting the amp exposes, even those without a dedicated entity.
+  fields:
+    command:
+      name: Command
+      description: "The variable to set, e.g. Source1.Enabled, Main.Brightness, Main.Source"
+      required: true
+      example: "Source1.Enabled"
+      selector:
+        text:
+    value:
+      name: Value
+      description: "The value to set, e.g. No, Yes, 2, On, Off"
+      required: true
+      example: "No"
+      selector:
+        text:
+
+query:
+  name: Query value
+  description: Read any NAD C368 variable and return its current value.
+  fields:
+    command:
+      name: Command
+      description: "The variable to read, e.g. Main.Brightness, Source3.Name"
+      required: true
+      example: "Main.Brightness"
+      selector:
+        text:

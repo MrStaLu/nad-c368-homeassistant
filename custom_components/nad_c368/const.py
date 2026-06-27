@@ -3,13 +3,20 @@
 DOMAIN = "nad_c368"
 DEFAULT_NAME = "NAD C368"
 DEFAULT_PORT = 8234
-DEFAULT_MIN_VOLUME = -70
-DEFAULT_MAX_VOLUME = -10
+DEFAULT_MIN_VOLUME = -80
+DEFAULT_MAX_VOLUME = 12
 DEFAULT_VOLUME_STEP = 2
 
 CONF_MIN_VOLUME = "min_volume"
 CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"
+CONF_POLL_INTERVAL = "poll_interval"
+
+DEFAULT_POLL_INTERVAL = 5  # seconds between state polls
+
+# Source config keys are "source_1" … "source_8"
+SOURCE_KEY_PREFIX = "source_"
+SOURCE_NUMBERS = ("1", "2", "3", "4", "5", "6", "7", "8")
 
 DEFAULT_SOURCES: dict[str, str] = {
     "1": "Optical 1",
@@ -22,7 +29,7 @@ DEFAULT_SOURCES: dict[str, str] = {
     "8": "Bluetooth",
 }
 
-POLL_INTERVAL = 15  # seconds between state polls
+POLL_INTERVAL = 5  # fallback seconds between state polls
 
 # NAD RS232 variable names
 NAD_POWER = "Main.Power"

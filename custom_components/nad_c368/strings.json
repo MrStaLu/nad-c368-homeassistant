@@ -20,5 +20,55 @@
     "abort": {
       "already_configured": "This device is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NAD C368 settings",
+        "description": "Adjust connection, polling, the volume-to-dB mapping, and rename inputs. 0% = Minimum Volume, 100% = Maximum Volume.",
+        "data": {
+          "host": "IP Address",
+          "port": "TCP Port",
+          "poll_interval": "Status poll interval (seconds)",
+          "min_volume": "Minimum Volume = 0% (dB)",
+          "max_volume": "Maximum Volume = 100% (dB)",
+          "volume_step": "Volume Step (dB)",
+          "source_1": "Input 1 name (Optical 1)",
+          "source_2": "Input 2 name (Optical 2)",
+          "source_3": "Input 3 name (Coaxial 1)",
+          "source_4": "Input 4 name (Coaxial 2)",
+          "source_5": "Input 5 name (Phono)",
+          "source_6": "Input 6 name (Line 1)",
+          "source_7": "Input 7 name (Line 2)",
+          "source_8": "Input 8 name (Bluetooth)"
+        }
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Send any NAD C368 RS232 command as variable=value. Reaches every setting the amp exposes, even those without a dedicated entity.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The variable to set, e.g. Source1.Enabled, Main.Brightness, Main.Source"
+        },
+        "value": {
+          "name": "Value",
+          "description": "The value to set, e.g. No, Yes, 2, On, Off"
+        }
+      }
+    },
+    "query": {
+      "name": "Query value",
+      "description": "Read any NAD C368 variable and return its current value.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The variable to read, e.g. Main.Brightness, Source3.Name"
+        }
+      }
+    }
   }
 }

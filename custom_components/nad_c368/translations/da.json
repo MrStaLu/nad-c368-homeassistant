@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Forbind til NAD C368",
+        "description": "Indtast IP-adressen og porten på din USR-TCP232-302 seriel-til-Ethernet-konverter.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "TCP-port",
+          "name": "Enhedsnavn",
+          "min_volume": "Minimumsvolumen (dB)",
+          "max_volume": "Maksimumsvolumen (dB)",
+          "volume_step": "Volumentrin (dB)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan ikke forbinde. Tjek IP-adresse, port, og at konverteren er tændt."
+    },
+    "abort": {
+      "already_configured": "Denne enhed er allerede konfigureret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NAD C368-indstillinger",
+        "description": "Justér forbindelse, polling, volumen-til-dB-mapping og omdøb kilder. 0% = minimumsvolumen, 100% = maksimumsvolumen.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "TCP-port",
+          "poll_interval": "Status-pollinterval (sekunder)",
+          "min_volume": "Minimumsvolumen = 0% (dB)",
+          "max_volume": "Maksimumsvolumen = 100% (dB)",
+          "volume_step": "Volumentrin (dB)",
+          "source_1": "Navn på kilde 1 (Optical 1)",
+          "source_2": "Navn på kilde 2 (Optical 2)",
+          "source_3": "Navn på kilde 3 (Coaxial 1)",
+          "source_4": "Navn på kilde 4 (Coaxial 2)",
+          "source_5": "Navn på kilde 5 (Phono)",
+          "source_6": "Navn på kilde 6 (Line 1)",
+          "source_7": "Navn på kilde 7 (Line 2)",
+          "source_8": "Navn på kilde 8 (Bluetooth)"
+        }
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send kommando",
+      "description": "Send en hvilken som helst NAD C368 RS232-kommando som variabel=værdi. Giver adgang til alle indstillinger på forstærkeren — også dem uden en dedikeret enhed.",
+      "fields": {
+        "command": {
+          "name": "Kommando",
+          "description": "Variablen der skal sættes, fx Source1.Enabled, Main.Brightness, Main.Source"
+        },
+        "value": {
+          "name": "Værdi",
+          "description": "Værdien der skal sættes, fx No, Yes, 2, On, Off"
+        }
+      }
+    },
+    "query": {
+      "name": "Læs værdi",
+      "description": "Læs en hvilken som helst NAD C368-variabel og få den nuværende værdi tilbage.",
+      "fields": {
+        "command": {
+          "name": "Kommando",
+          "description": "Variablen der skal læses, fx Main.Brightness, Source3.Name"
+        }
+      }
+    }
+  }
+}

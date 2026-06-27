@@ -93,4 +93,6 @@ class NADNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self._client.set_int_var(self._desc.nad_variable, int(value))
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.data is not None:
+            self.coordinator.data[self._desc.data_key] = int(value)
+        self.async_write_ha_state()
