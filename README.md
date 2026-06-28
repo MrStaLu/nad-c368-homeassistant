@@ -2,56 +2,55 @@
   <img src="images/logo.png" alt="NAD C368 Control by MrStaLu" width="520">
 </p>
 
-<h1 align="center">NAD C368 Control</h1>
+<h1 align="center">NAD C368 Control HA</h1>
 
 <p align="center">
-  Styr din <b>NAD C368</b>-forstærker fra Home Assistant — og fra Apple HomeKit/Siri —
-  via en USR-TCP232-302 seriel-til-Ethernet-konverter.<br>
-  <i>Control your NAD C368 amplifier from Home Assistant via RS232 over Ethernet.</i><br>
-  En original integration af <b>MrStaLu</b>.
+  Control your <b>NAD C368</b> amplifier from Home Assistant — and from Apple HomeKit/Siri —
+  through a USR-TCP232-302 serial-to-Ethernet converter.<br>
+  An original integration by <b>MrStaLu</b>.
 </p>
 
 ---
 
-## ✨ Funktioner (v1.3.0)
+## ✨ Features (v1.3.0)
 
-| Entitet | Type | Hvad |
+| Entity | Type | What |
 |---|---|---|
-| NAD C368 | `media_player` | Tænd/sluk, volumen, mute, kildevalg (8 indgange) |
-| Bas / Diskant | `number` | −7 til +7 dB |
-| Balance | `number` | −18 til +18 |
-| Højttaler A / B | `switch` | Til/fra |
-| Tone-bypass | `switch` | Forbi bas/diskant-EQ |
-| Min/Max volumen, trin, poll | `number` | Indstillinger — redigerbare direkte fra dashboardet |
-| Kilde 1–8 navn | `text` | Omdøb indgange fra dashboardet |
+| NAD C368 | `media_player` | Power, volume, mute, source selection (8 inputs) |
+| Bass / Treble | `number` | −7 to +7 dB |
+| Balance | `number` | −18 to +18 |
+| Speaker A / B | `switch` | On/Off |
+| Tone Defeat | `switch` | Bypasses bass/treble EQ |
+| Min/Max volume, step, poll | `number` | Settings — editable straight from the dashboard |
+| Input 1–8 name | `text` | Rename inputs from the dashboard |
 
-Derudover: **volumen vist som 0–100 %** (lineær dB-mapping), **universelle handlinger** til alle RS232-kommandoer, og **dansk + engelsk** UI (Home Assistant vælger sprog automatisk).
+Plus: **volume shown as 0–100 %** (linear dB mapping), **universal actions** for any RS232 command, and **English + Danish** UI (Home Assistant picks the language automatically).
 
 ---
 
-## 🛒 Hardware — og hvor du køber den
+## 🛒 Hardware — and where to buy it
 
-Du skal bruge:
+You'll need:
 
-- **NAD C368**-forstærker (RS232-port på bagsiden, DB9 hun)
-- **USR-TCP232-302** seriel-til-Ethernet-konverter — kan bl.a. købes hos
+- A **NAD C368** amplifier (RS232 port on the back, DB9 female)
+- A **USR-TCP232-302** serial-to-Ethernet converter — available from
   **[CDON](https://cdon.dk/hjemme-elektronik/usr-tcp232-302-rs232-till-tcp-ip-omvandlare-serial-till-ethernet-support-dns-dhcp-inbyggd-webbplats-c105000015476055)**
-  (alternativt [Fruugo](https://www.fruugo.dk/mini-seriel-portserver-seriel-til-ethernet-modulkonverter-usr-tcp232-302/p-400318900-851897763?language=da),
-  [eBay](https://www.ebay.com/itm/334411000168) eller [Amazon](https://www.amazon.de/dp/B01GPGPEBM))
-- **DB9 han-han null modem-kabel** (ben 2 og 3 krydset)
-- Et **Ethernet-kabel**
-- En **Raspberry Pi** med Home Assistant (eller anden HA-installation)
+  (or [Fruugo](https://www.fruugo.dk/mini-seriel-portserver-seriel-til-ethernet-modulkonverter-usr-tcp232-302/p-400318900-851897763?language=da),
+  [eBay](https://www.ebay.com/itm/334411000168) or [Amazon](https://www.amazon.de/dp/B01GPGPEBM))
+- A **DB9 male-to-male null modem cable** (pins 2 and 3 crossed)
+- An **Ethernet cable**
+- A **Raspberry Pi** running Home Assistant (or any other HA install)
 
-<p align="center"><img src="images/setup.png" alt="Opsætning" width="760"></p>
+<p align="center"><img src="images/setup.png" alt="How it connects" width="760"></p>
 
 ---
 
-## 🔌 Trin 1 — Konverteren (USR-TCP232-302)
+## 🔌 Step 1 — The converter (USR-TCP232-302)
 
-Konverteren har som standard IP **192.168.0.7** og login **admin / admin**. Sæt din computer
-midlertidigt på samme net (fx 192.168.0.10), åbn `http://192.168.0.7` i en browser, log ind og indstil:
+The converter ships with IP **192.168.0.7** and login **admin / admin**. Put your computer
+temporarily on the same subnet (e.g. 192.168.0.10), open `http://192.168.0.7` in a browser, log in and set:
 
-| Indstilling | Værdi |
+| Setting | Value |
 |---|---|
 | Baud rate | 115200 |
 | Data bits | 8 |
@@ -60,54 +59,56 @@ midlertidigt på samme net (fx 192.168.0.10), åbn `http://192.168.0.7` i en bro
 | Flow control | None |
 | Work mode | **TCP Server** |
 | Local port | 8234 |
-| Device IP | fast IP på dit net, fx 192.168.1.200 |
+| Device IP | a static IP on your network, e.g. 192.168.1.200 |
 
-Lav en DHCP-reservation på din router, så IP'en ikke skifter. Forbind: **NAD C368 → null modem DB9 → konverter → Ethernet → netværk**.
+Add a DHCP reservation on your router so the IP doesn't change. Wire it up:
+**NAD C368 → null modem DB9 → converter → Ethernet → network**.
 
 ---
 
-## 📦 Trin 2 — Installation i Home Assistant (HACS)
+## 📦 Step 2 — Install in Home Assistant (HACS)
 
-1. Åbn **HACS → Integrations → ⋮ (øverst til højre) → Custom repositories**
-2. Indsæt `https://github.com/MrStaLu/NAD-C368-homeassistant` og vælg type **Integration** → **Add**
-3. Søg efter **NAD C368** på listen → **Download**
-4. **Genstart Home Assistant**
+1. Open **HACS → Integrations → ⋮ (top right) → Custom repositories**
+2. Add `https://github.com/MrStaLu/NAD-C368-homeassistant` as type **Integration** → **Add**
+3. Search for **NAD C368** in the list → **Download**
+4. **Restart Home Assistant**
 
 <details>
-<summary>Manuel installation (uden HACS)</summary>
+<summary>Manual installation (without HACS)</summary>
 
-1. Kopiér mappen `custom_components/nad_c368` ind i din HA's `config/custom_components/`
-2. Genstart Home Assistant
+1. Copy the `custom_components/nad_c368` folder into your HA `config/custom_components/`
+2. Restart Home Assistant
 </details>
 
 ---
 
-## ⚙️ Trin 3 — Tilføj enheden
+## ⚙️ Step 3 — Add the device
 
-1. **Indstillinger → Enheder & tjenester → Tilføj integration**
-2. Søg **NAD C368**
-3. Indtast konverterens **IP-adresse** og **port** (fx 192.168.1.200 / 8234) → **Send**
+1. **Settings → Devices & Services → Add Integration**
+2. Search for **NAD C368**
+3. Enter the converter's **IP address** and **port** (e.g. 192.168.1.200 / 8234) → **Submit**
 
-Entiteterne oprettes automatisk. Lægger du dem på et dashboard (eller opretter et "NAD C368"-dashboard), får du et fast punkt i sidebaren.
+The entities are created automatically. Add them to a dashboard (or create a "NAD C368" dashboard)
+to get a fixed item in the sidebar.
 
 ---
 
-## 🎚️ Trin 4 — Justér indstillinger og omdøb kilder
+## 🎚️ Step 4 — Adjust settings and rename inputs
 
-Alle indstillinger er **entiteter**, så du retter dem direkte fra dashboardet eller enhedssiden —
-ingen genstart nødvendig.
+All settings are **entities**, so you change them straight from the dashboard or the device page —
+no restart needed.
 
-<p align="center"><img src="images/settings.png" alt="Fremgangsmåde" width="760"></p>
+<p align="center"><img src="images/settings.png" alt="How to adjust settings" width="760"></p>
 
-- **Volumen-mapping:** sæt `Minimum volume` (= 0 %) og `Maximum volume` (= 100 %) i dB.
-  Standard er −80 → +12 dB. 10 % ≈ −71 dB.
-- **Omdøb en kilde:** ret fx tekstfeltet `Input 5 name` fra *Phono* til *Pladespiller* — navnet
-  bruges med det samme i kildevælgeren.
-- Du kan også bruge **Indstillinger → Enheder & tjenester → NAD C368 → Konfigurer** til det samme.
+- **Volume mapping:** set `Minimum volume` (= 0 %) and `Maximum volume` (= 100 %) in dB.
+  Default is −80 → +12 dB. 10 % ≈ −71 dB.
+- **Rename an input:** change e.g. the `Input 5 name` text field from *Phono* to *Turntable* — the
+  name is used immediately in the source selector.
+- You can also use **Settings → Devices & Services → NAD C368 → Configure** for the same.
 
-### Kilder (standard)
+### Sources (default mapping)
 
-| Nr. | Indgang | | Nr. | Indgang |
+| No. | Input | | No. | Input |
 |---|---|---|---|---|
 | 1 | Optical 1 | | 5 | Phono |
 | 2 | Optical 2 | | 6 | Line 1 |
@@ -118,19 +119,19 @@ ingen genstart nødvendig.
 
 ## 🍎 Apple HomeKit / Siri
 
-Tilføj **HomeKit Bridge** (Indstillinger → Enheder & tjenester → Tilføj integration → HomeKit Bridge)
-og vælg `media_player.nad_c368`. Så kan du styre tænd/sluk, volumen, mute og kilde fra Apple Home og Siri.
-Bas/diskant/balance findes kun i HA-appen (HomeKit har ingen tilsvarende).
+Add the **HomeKit Bridge** (Settings → Devices & Services → Add Integration → HomeKit Bridge)
+and select `media_player.nad_c368`. You can then control power, volume, mute and source from
+Apple Home and Siri. Bass/treble/balance live only in the HA app (HomeKit has no equivalent).
 
 ---
 
-## 🛠️ Alle kommandoer (avanceret)
+## 🛠️ Every command (advanced)
 
-To handlinger gør **enhver** RS232-kommando tilgængelig fra HA (Udviklerværktøjer → Handlinger):
+Two actions make **any** RS232 command available from HA (Developer Tools → Actions):
 
-- **`nad_c368.send_command`** — `command` + `value`, fx `Source5.Enabled` = `No`
-- **`nad_c368.query`** — læs en hvilken som helst værdi tilbage
+- **`nad_c368.send_command`** — `command` + `value`, e.g. `Source5.Enabled` = `No`
+- **`nad_c368.query`** — read any value back
 
 ---
 
-<p align="center"><i>NAD C368 Control — by MrStaLu</i></p>
+<p align="center"><i>NAD C368 Control HA — by MrStaLu</i></p>

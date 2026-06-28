@@ -87,7 +87,9 @@ class NADOptionsFlow(config_entries.OptionsFlow):
     """Allow changing volume mapping after setup (the Configure button)."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+        # Stored under a private name to avoid clashing with the reserved
+        # `config_entry` property in newer Home Assistant versions.
+        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -98,7 +100,7 @@ class NADOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=cleaned)
 
         # Pre-fill with current values (options override original setup data)
-        current = {**self.config_entry.data, **self.config_entry.options}
+        current = {**self._config_entry.data, **self._config_entry.options}
 
         schema: dict = {
             vol.Required(

@@ -9,6 +9,33 @@ patch (1.2.0 → 1.2.1).
 
 ---
 
+## [1.3.2] – 2026-06-28
+
+### Changed / Ændret
+- Renamed to **NAD C368 Control HA** (integration display name + logo).
+  The technical domain stays `nad_c368`, so existing installs and all entity IDs are
+  unaffected. *Omdøbt til NAD C368 Control HA; den tekniske `nad_c368`-id er uændret.*
+
+---
+
+## [1.3.1] – 2026-06-28
+
+### Fixed / Rettet
+- **Robust loading on all HA versions** – the `SupportsResponse` import (used by the
+  `query` action) is now optional, so an older Home Assistant can no longer fail to import
+  the integration and leave every entity as "Entity not found".
+  *Integrationen indlæses nu også på ældre HA-versioner; alle entiteter forsvinder ikke længere.*
+- **Options flow** – store the config entry under a private name to avoid the
+  deprecated `self.config_entry` assignment in newer HA.
+
+### Added / Tilføjet
+- **Automatic GitHub releases** – a workflow (`.github/workflows/release.yml`) now
+  publishes a Release whenever the manifest version changes, so HACS detects updates
+  automatically instead of needing a remove/re-add.
+  *Automatiske GitHub-releases, så HACS selv ser nye versioner.*
+
+---
+
 ## [1.3.0] – 2026-06-27
 
 ### Added / Tilføjet

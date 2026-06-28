@@ -7,9 +7,18 @@ from datetime import timedelta
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+# SupportsResponse is only available on newer Home Assistant. Import it
+# defensively so the whole integration still loads on older versions.
+try:
+    from homeassistant.core import SupportsResponse
+
+    _HAS_RESPONSE = True
+except ImportError:  # pragma: no cover
+    _HAS_RESPONSE = False
 
 from .const import (
     CONF_POLL_INTERVAL,
@@ -76,13 +85,14 @@ def _register_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, _async_send, schema=SEND_COMMAND_SCHEMA
     )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_QUERY,
-        _async_query,
-        schema=QUERY_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
+    if _HAS_RESPONSE:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_QUERY,
+            _async_query,
+            schema=QUERY_SCHEMA,
+            supports_response=SupportsResponse.ONLY,
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
