@@ -1,0 +1,94 @@
+title: NAD C368
+views:
+  - title: NAD C368
+    path: nad
+    icon: mdi:speaker
+    cards:
+      # ── Logo (hentes direkte fra dit GitHub) ────────
+      - type: picture
+        image: https://raw.githubusercontent.com/MrStaLu/nad-c368-homeassistant/main/images/logo.png
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+
+      # ── Daglig styring ──────────────────────────────
+      - type: media-control
+        entity: media_player.nad_c368
+
+      - type: entities
+        title: Lyd
+        show_header_toggle: false
+        entities:
+          - entity: number.nad_c368_bass
+            name: Bas
+          - entity: number.nad_c368_treble
+            name: Diskant
+          - entity: number.nad_c368_balance
+            name: Balance
+          - type: divider
+          - entity: switch.nad_c368_speaker_a
+            name: Højttaler A
+          - entity: switch.nad_c368_speaker_b
+            name: Højttaler B
+          - entity: switch.nad_c368_tone_defeat
+            name: Tone-bypass
+
+      # ── Indstillinger: volumen-mapping & polling ────
+      - type: entities
+        title: Indstillinger
+        show_header_toggle: false
+        entities:
+          - entity: number.nad_c368_minimum_volume
+            name: Min. volumen (0 %)
+          - entity: number.nad_c368_maximum_volume
+            name: Maks. volumen (100 %)
+          - entity: number.nad_c368_volume_step
+            name: Volumentrin
+          - entity: number.nad_c368_poll_interval
+            name: Status-pollinterval
+
+      # ── Indstillinger: kildenavne ───────────────────
+      - type: entities
+        title: Kildenavne
+        show_header_toggle: false
+        entities:
+          - entity: text.nad_c368_input_1_name
+            name: 1 · Optical 1
+          - entity: text.nad_c368_input_2_name
+            name: 2 · Optical 2
+          - entity: text.nad_c368_input_3_name
+            name: 3 · Coaxial 1
+          - entity: text.nad_c368_input_4_name
+            name: 4 · Coaxial 2
+          - entity: text.nad_c368_input_5_name
+            name: 5 · Phono
+          - entity: text.nad_c368_input_6_name
+            name: 6 · Line 1
+          - entity: text.nad_c368_input_7_name
+            name: 7 · Line 2
+          - entity: text.nad_c368_input_8_name
+            name: 8 · Bluetooth
+
+      # ── Hurtige kommandoer (kræver v1.3.0) ──────────
+      # Tilpas command/value frit. Eksempler:
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Deaktivér Phono
+            icon: mdi:record-player
+            tap_action:
+              action: perform-action
+              perform_action: nad_c368.send_command
+              data:
+                command: Source5.Enabled
+                value: "No"
+          - type: button
+            name: Aktivér Phono
+            icon: mdi:record-player
+            tap_action:
+              action: perform-action
+              perform_action: nad_c368.send_command
+              data:
+                command: Source5.Enabled
+                value: "Yes"

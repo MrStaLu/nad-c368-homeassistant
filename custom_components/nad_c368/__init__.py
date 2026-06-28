@@ -31,7 +31,7 @@ from .nad_client import NADClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SWITCH, Platform.TEXT]
 
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_QUERY = "query"
