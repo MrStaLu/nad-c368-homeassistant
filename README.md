@@ -12,7 +12,7 @@
 
 ---
 
-## ✨ Features (v1.3.0)
+## ✨ Features (v1.3.2)
 
 | Entity | Type | What |
 |---|---|---|
