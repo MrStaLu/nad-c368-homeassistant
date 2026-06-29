@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="images/logo.png" alt="NAD C368 Control by MrStaLu" width="520">
+  <img src="images/logo.png" alt="NAD C368 HA + HOMEKIT CONTROL by MrStaLu" width="520">
 </p>
 
-<h1 align="center">NAD C368 Control HA</h1>
+<h1 align="center">NAD C368 HA + HOMEKIT CONTROL</h1>
 
 <p align="center">
   Control your <b>NAD C368</b> amplifier from Home Assistant — and from Apple HomeKit/Siri —
@@ -134,4 +134,4 @@ Two actions make **any** RS232 command available from HA (Developer Tools → Ac
 
 ---
 
-<p align="center"><i>NAD C368 Control HA — by MrStaLu</i></p>
+<p align="center"><i>NAD C368 HA + HOMEKIT CONTROL — by MrStaLu</i></p>

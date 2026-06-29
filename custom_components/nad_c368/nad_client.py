@@ -5,11 +5,12 @@ import asyncio
 import logging
 from typing import Optional
 
+from .const import SOURCE_ENABLE_OFF, SOURCE_ENABLE_ON
+
 _LOGGER = logging.getLogger(__name__)
 
 CONNECT_TIMEOUT = 5.0
 RESPONSE_TIMEOUT = 1.0
-RECONNECT_DELAY = 10.0  # seconds before reconnect attempt
 
 
 class NADClient:
@@ -56,10 +57,32 @@ class NADClient:
     def connected(self) -> bool:
         return self._connected
 
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def port(self) -> int:
+        return self._port
+
     async def _ensure_connected(self) -> bool:
         if not self._connected:
             return await self.connect()
         return True
+
+    async def _drain_buffer(self) -> None:
+        """Discard any buffered/unsolicited data so the next read is fresh."""
+        if self._reader is None:
+            return
+        try:
+            while True:
+                data = await asyncio.wait_for(self._reader.read(256), timeout=0.02)
+                if not data:
+                    break
+        except (asyncio.TimeoutError, OSError):
+            return
+        except Exception:
+            return
 
     # ── Send / Query ─────────────────────────────────────────────────────────
 
@@ -85,6 +108,8 @@ class NADClient:
             if not await self._ensure_connected():
                 return None
             try:
+                # Clear any stale/unsolicited data first so we read the real reply.
+                await self._drain_buffer()
                 cmd = f"\r{variable}?\r"
                 self._writer.write(cmd.encode("ascii"))
                 await self._writer.drain()
@@ -166,3 +191,17 @@ class NADClient:
 
     async def set_int_var(self, variable: str, value: int) -> bool:
         return await self.send_command(variable, str(value))
+
+    # ── Per-source enable/disable (SourceN.Enabled = Yes/No) ──────────────────
+
+    async def get_source_enabled(self, number: str) -> Optional[bool]:
+        val = await self.query(f"Source{number}.Enabled")
+        if val is None:
+            return None
+        return val.strip().lower() == "yes"
+
+    async def set_source_enabled(self, number: str, enabled: bool) -> bool:
+        return await self.send_command(
+            f"Source{number}.Enabled",
+            SOURCE_ENABLE_ON if enabled else SOURCE_ENABLE_OFF,
+        )

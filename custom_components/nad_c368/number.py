@@ -96,6 +96,11 @@ async def async_setup_entry(
         NADConfigNumber(entry, CONF_POLL_INTERVAL, "Poll interval",
                         1, 300, 1, DEFAULT_POLL_INTERVAL, "s", "mdi:timer-sync"),
     ]
+    # Two views of the same volume — % and dB — sharing the same min→max mapping.
+    entities += [
+        NADVolumeNumber(data["coordinator"], data["client"], entry, "percent"),
+        NADVolumeNumber(data["coordinator"], data["client"], entry, "db"),
+    ]
     async_add_entities(entities)
 
 
@@ -119,7 +124,7 @@ class NADNumber(CoordinatorEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        val = self.coordinator.data.get(self._desc.data_key)
+        val = (self.coordinator.data or {}).get(self._desc.data_key)
         return float(val) if val is not None else None
 
     async def async_set_native_value(self, value: float) -> None:
@@ -166,3 +171,73 @@ class NADConfigNumber(NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         new_options = {**self._entry.options, self._key: int(value)}
         self.hass.config_entries.async_update_entry(self._entry, options=new_options)
+
+
+class NADVolumeNumber(CoordinatorEntity, NumberEntity):
+    """The current volume shown as % or dB. Both views share the same min→max
+    mapping, so 0 % == Min volume and 100 % == Max volume in either view."""
+
+    _attr_has_entity_name = True
+    _attr_native_step = 1
+
+    def __init__(self, coordinator, client, entry: ConfigEntry, mode: str) -> None:
+        super().__init__(coordinator)
+        self._client = client
+        self._entry = entry
+        self._mode = mode  # "percent" or "db"
+        if mode == "percent":
+            self._attr_name = "Volume percent"
+            self._attr_native_unit_of_measurement = "%"
+            self._attr_icon = "mdi:volume-high"
+        else:
+            self._attr_name = "Volume dB"
+            self._attr_native_unit_of_measurement = "dB"
+            self._attr_icon = "mdi:sine-wave"
+        self._attr_unique_id = f"{entry.entry_id}_volume_{mode}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.data.get(CONF_NAME, DEFAULT_NAME),
+            "manufacturer": "NAD",
+            "model": "C368",
+        }
+
+    @property
+    def _min_vol(self) -> int:
+        return merged_config(self._entry).get(CONF_MIN_VOLUME, DEFAULT_MIN_VOLUME)
+
+    @property
+    def _max_vol(self) -> int:
+        return merged_config(self._entry).get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
+
+    @property
+    def native_min_value(self) -> float:
+        return 0 if self._mode == "percent" else self._min_vol
+
+    @property
+    def native_max_value(self) -> float:
+        return 100 if self._mode == "percent" else self._max_vol
+
+    @property
+    def native_value(self) -> float | None:
+        vol = (self.coordinator.data or {}).get("volume")
+        if vol is None:
+            return None
+        if self._mode == "db":
+            return float(vol)
+        span = self._max_vol - self._min_vol
+        if span <= 0:
+            return None
+        return round(max(0.0, min(100.0, (vol - self._min_vol) / span * 100)))
+
+    async def async_set_native_value(self, value: float) -> None:
+        if self._mode == "db":
+            db = round(value)
+        else:
+            span = self._max_vol - self._min_vol
+            db = round(self._min_vol + (value / 100) * span)
+        await self._client.set_volume(db)
+        if self.coordinator.data is not None:
+            self.coordinator.data["volume"] = db
+        self.async_write_ha_state()
+        # Keep the media player and the other (%/dB) view in sync immediately.
+        self.coordinator.async_update_listeners()

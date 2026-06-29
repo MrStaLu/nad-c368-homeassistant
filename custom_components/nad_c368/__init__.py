@@ -26,14 +26,11 @@ from .const import (
     DOMAIN,
     NAD_BALANCE,
     NAD_BASS,
-    NAD_MUTE,
-    NAD_POWER,
-    NAD_SOURCE,
     NAD_SPEAKER_A,
     NAD_SPEAKER_B,
     NAD_TONE_DEFEAT,
     NAD_TREBLE,
-    NAD_VOLUME,
+    SOURCE_NUMBERS,
 )
 from .helpers import merged_config
 from .nad_client import NADClient
@@ -106,6 +103,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await client.connect():
         _LOGGER.error("Cannot connect to NAD C368 at %s:%s", host, port)
 
+    # SourceN.Enabled rarely changes, so poll it only roughly every 30s (and
+    # disable it automatically if the amp never answers, so it can't slow things
+    # down). The per-press pull keeps the toggles fresh on user action.
+    poll_state = {"enable_supported": True, "tick": 0, "enabled_cache": {}}
+    enable_poll_every = max(1, round(30 / max(poll_interval, 1)))
+
     async def async_update_data() -> dict:
         """Poll all state from the amp."""
         data: dict = {}
@@ -121,6 +124,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data["bass"] = await client.get_int_var(NAD_BASS)
                 data["treble"] = await client.get_int_var(NAD_TREBLE)
                 data["balance"] = await client.get_int_var(NAD_BALANCE)
+                if poll_state["enable_supported"]:
+                    poll_state["tick"] += 1
+                    if (poll_state["tick"] - 1) % enable_poll_every == 0:
+                        enabled: dict = {}
+                        any_answer = False
+                        for num in SOURCE_NUMBERS:
+                            val = await client.get_source_enabled(num)
+                            if val is not None:
+                                any_answer = True
+                            enabled[num] = val
+                        poll_state["enabled_cache"] = enabled
+                        if not any_answer:
+                            # Amp doesn't expose SourceN.Enabled — stop polling.
+                            poll_state["enable_supported"] = False
+                    data["source_enabled"] = poll_state["enabled_cache"]
         except Exception as err:
             raise UpdateFailed(f"Error communicating with NAD C368: {err}") from err
         return data
@@ -128,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=timedelta(seconds=poll_interval),
@@ -152,8 +171,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the entry when its options are updated."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Apply option changes. Only host/port changes need a reconnect (reload);
+    volume mapping, names and poll interval are applied live without the flicker
+    of a full reload."""
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not data:
+        return
+    client = data["client"]
+    coordinator = data["coordinator"]
+    cfg = merged_config(entry)
+
+    if cfg[CONF_HOST] != client.host or cfg[CONF_PORT] != client.port:
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
+
+    coordinator.update_interval = timedelta(
+        seconds=cfg.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
+    )
+    coordinator.async_update_listeners()
+    await coordinator.async_request_refresh()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

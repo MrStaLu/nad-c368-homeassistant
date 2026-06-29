@@ -66,26 +66,45 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             "manufacturer": "NAD",
             "model": "C368",
         }
-        # Options (Configure button) override the original setup values.
-        opts = {**entry.data, **entry.options}
-        self._min_vol = opts.get(CONF_MIN_VOLUME, DEFAULT_MIN_VOLUME)
-        self._max_vol = opts.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
-        self._vol_step = opts.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-        # Source names (custom names from options, else defaults)
-        self._sources = get_sources(entry)
-        # Reverse map: "Phono" → "5"
-        self._source_to_num = {v: k for k, v in self._sources.items()}
+        # Volume mapping and source names are read live (properties below) so the
+        # Configure dialog / setting entities apply without a reload.
+
+    # ── Live config reads (so changes apply without a reload) ──────────────────
+
+    @property
+    def _opts(self) -> dict:
+        return {**self._entry.data, **self._entry.options}
+
+    @property
+    def _min_vol(self) -> int:
+        return self._opts.get(CONF_MIN_VOLUME, DEFAULT_MIN_VOLUME)
+
+    @property
+    def _max_vol(self) -> int:
+        return self._opts.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
+
+    @property
+    def _vol_step(self) -> int:
+        return self._opts.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+
+    @property
+    def _sources(self) -> dict:
+        return get_sources(self._entry)
+
+    @property
+    def _source_to_num(self) -> dict:
+        return {v: k for k, v in self._sources.items()}
 
     @property
     def state(self) -> MediaPlayerState | None:
-        power = self.coordinator.data.get("power")
+        power = (self.coordinator.data or {}).get("power")
         if power is None:
             return None
         return MediaPlayerState.ON if power else MediaPlayerState.OFF
 
     @property
     def volume_level(self) -> float | None:
-        vol = self.coordinator.data.get("volume")
+        vol = (self.coordinator.data or {}).get("volume")
         if vol is None:
             return None
         # Convert dB (min_vol…max_vol) to 0.0–1.0
@@ -96,16 +115,23 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def is_volume_muted(self) -> bool | None:
-        return self.coordinator.data.get("mute")
+        return (self.coordinator.data or {}).get("mute")
 
     @property
     def source(self) -> str | None:
-        src_num = self.coordinator.data.get("source")
+        src_num = (self.coordinator.data or {}).get("source")
         return self._sources.get(src_num) if src_num else None
 
     @property
     def source_list(self) -> list[str]:
-        return list(self._sources.values())
+        # Only show inputs that are enabled on the amp. Unknown (None) stays
+        # visible, so the list never empties if the amp doesn't report it.
+        enabled = (self.coordinator.data or {}).get("source_enabled") or {}
+        return [
+            name
+            for num, name in self._sources.items()
+            if enabled.get(num) is not False
+        ]
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -140,13 +166,13 @@ class NADMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._optimistic(volume=db)
 
     async def async_volume_up(self) -> None:
-        vol = self.coordinator.data.get("volume") or self._min_vol
+        vol = (self.coordinator.data or {}).get("volume") or self._min_vol
         new_vol = min(vol + self._vol_step, self._max_vol)
         await self._client.set_volume(new_vol)
         self._optimistic(volume=new_vol)
 
     async def async_volume_down(self) -> None:
-        vol = self.coordinator.data.get("volume") or self._min_vol
+        vol = (self.coordinator.data or {}).get("volume") or self._min_vol
         new_vol = max(vol - self._vol_step, self._min_vol)
         await self._client.set_volume(new_vol)
         self._optimistic(volume=new_vol)

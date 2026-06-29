@@ -9,6 +9,55 @@ patch (1.2.0 → 1.2.1).
 
 ---
 
+## [1.5.0] – 2026-06-28
+
+### Added / Tilføjet
+- **dB / % volume toggle** — a "Volume in dB" switch (`switch.nad_c368_volume_in_db`)
+  flips the dashboard volume control between **% and dB**. Two number entities back it:
+  `number.nad_c368_volume_percent` and `number.nad_c368_volume_db`. Both share the same
+  Min→Max mapping, so **0 % = Min volume and 100 % = Max volume** in either view — they
+  can never disagree. *dB/%-skifter; 0 % og 100 % er ens i begge visninger.*
+
+---
+
+## [1.4.2] – 2026-06-28
+
+### Fixed / Rettet (code review)
+- Pass `config_entry` to the data coordinator (removes deprecation warnings, future-proof).
+- `query()` now clears stale/unsolicited serial data before reading, avoiding occasional wrong values.
+- `SourceN.Enabled` is polled ~every 30s instead of every cycle (less serial load), with a cache so toggles stay populated between polls.
+- Changing volume mapping, input names or poll interval now applies **live** — only host/port changes trigger a reload (no more flicker).
+- None-safety guards on all coordinator state reads.
+- Removed dead code (unused imports/constants); wired the Yes/No source constants in.
+
+---
+
+## [1.4.1] – 2026-06-28
+
+### Changed / Ændret
+- Renamed to **NAD C368 HA + HOMEKIT CONTROL** (display name + logo). Technical domain
+  stays `nad_c368`, so existing installs and entity IDs are unaffected.
+
+---
+
+## [1.4.0] – 2026-06-28
+
+### Added / Tilføjet
+- **Enable / disable inputs** – one power-toggle `switch` per input
+  (`switch.nad_c368_input_N_enabled`) sends `SourceN.Enabled = Yes/No` to the amp.
+  After every press it pulls the real state back so the toggle reflects the amp.
+  *Tænd/sluk for hver indgang som power-knapper; status hentes efter hvert tryk.*
+- The media player's **source dropdown now lists only enabled inputs** — a disabled
+  input disappears from the selector. *Kun aktive indgange vises i kildevælgeren.*
+- Dashboard: an "Inputs (on/off)" tile grid with power icons (blue when enabled,
+  dimmed when disabled). *Dashboard-felter med power-ikon, blå når aktiv.*
+
+### Notes / Bemærkninger
+- Polling of `SourceN.Enabled` disables itself automatically if the amp never answers,
+  so an unsupported amp is not slowed down.
+
+---
+
 ## [1.3.2] – 2026-06-28
 
 ### Changed / Ændret

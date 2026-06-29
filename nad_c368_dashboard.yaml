@@ -7,6 +7,79 @@ views:
         image: https://raw.githubusercontent.com/MrStaLu/nad-c368-homeassistant/main/images/logo.png
       - type: media-control
         entity: media_player.nad_c368
+      # Volume in % or dB — flip with the toggle. Both share the same mapping,
+      # so 0 % = Min volume and 100 % = Max volume in either view.
+      - type: entities
+        title: Volume
+        show_header_toggle: false
+        entities:
+          - entity: switch.nad_c368_volume_in_db
+            name: Show in dB
+      - type: conditional
+        conditions:
+          - entity: switch.nad_c368_volume_in_db
+            state: "off"
+        card:
+          type: entities
+          show_header_toggle: false
+          entities:
+            - entity: number.nad_c368_volume_percent
+              name: Volume (%)
+      - type: conditional
+        conditions:
+          - entity: switch.nad_c368_volume_in_db
+            state: "on"
+        card:
+          type: entities
+          show_header_toggle: false
+          entities:
+            - entity: number.nad_c368_volume_db
+              name: Volume (dB)
+      - type: grid
+        title: Inputs (on / off)
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: switch.nad_c368_input_1_enabled
+            name: Input 1
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_2_enabled
+            name: Input 2
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_3_enabled
+            name: Input 3
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_4_enabled
+            name: Input 4
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_5_enabled
+            name: Input 5
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_6_enabled
+            name: Input 6
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_7_enabled
+            name: Input 7
+            icon: mdi:power
+            color: blue
+          - type: tile
+            entity: switch.nad_c368_input_8_enabled
+            name: Input 8
+            icon: mdi:power
+            color: blue
       - type: entities
         title: Audio
         show_header_toggle: false

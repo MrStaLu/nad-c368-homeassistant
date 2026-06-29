@@ -11,12 +11,17 @@ CONF_MIN_VOLUME = "min_volume"
 CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"
 CONF_POLL_INTERVAL = "poll_interval"
+CONF_SHOW_DB = "show_db"  # dashboard toggle: show volume in dB instead of %
 
 DEFAULT_POLL_INTERVAL = 5  # seconds between state polls
 
 # Source config keys are "source_1" … "source_8"
 SOURCE_KEY_PREFIX = "source_"
 SOURCE_NUMBERS = ("1", "2", "3", "4", "5", "6", "7", "8")
+
+# Enable/disable a source on the amp: SourceN.Enabled=Yes/No
+SOURCE_ENABLE_ON = "Yes"
+SOURCE_ENABLE_OFF = "No"
 
 DEFAULT_SOURCES: dict[str, str] = {
     "1": "Optical 1",
@@ -28,8 +33,6 @@ DEFAULT_SOURCES: dict[str, str] = {
     "7": "Line 2",
     "8": "Bluetooth",
 }
-
-POLL_INTERVAL = 5  # fallback seconds between state polls
 
 # NAD RS232 variable names
 NAD_POWER = "Main.Power"
